@@ -2,68 +2,85 @@ package controller
 
 import models.*
 
-class MatchController (val team1: Team,val team2: Team) {
+class MatchController {
 
-    fun selectRol(player1: Player, player2: Player, name1: String, name2: String, i: Int) {
-        println("The teams are attack $name1 Vs Defender $name2")
-        println("Round# ${i + 1} the players attack: ${player1.name} Vs Defender ${player2.name}")
-        if (player1.attack > player2.defense) {
-            score1 += 1
-            println("${player1.name} Scored!!")
-        } else if (player1.attack == player2.defense) {
-            println("Nice!! This is a Draw")
-        } else {
-            println("${player2.name} it's a genius")
-            score2 += 1
+    fun createTeam(name: String, numberPlayers: Int): Team {
+        val roles = mutableListOf(1, 2, 3)
+        val missingRoles = numberPlayers - 3
+
+        for (i in 1..missingRoles) {
+            roles.add((1..3).random())
         }
-    }
+        roles.shuffle()
 
-    fun playMatch(){
-        val rounds = minOf(team1.players.size, team2.players.size)
-        for (i in 0 until rounds){
-            if(i%2 == 0) {
-                val attacker = team1.players[i]
-                val defender = team2.players[i]
-                selectRol(attacker, defender,team1.name,team2.name, i)
+        val players = mutableListOf<Player>()
+        for (i in 0 until numberPlayers) {
+            players.add(createPlayer(i + 1, roles[i]))
+            if(roles[i]==1){
+                println("player ${i+1} Defender")
+            }else if(roles[i]==2){
+                println("player ${i+1} Midfielder")
             }else{
-                val attacker = team2.players[i]
-                val defender = team1.players[i]
-               selectRol(attacker, defender,team2.name,team1.name, i)
+                println("player ${i+1} Forward")
             }
         }
-        println("the final score is ${team1.name}: ${Match.score1} - ${team2.name}: $score2")
-    }
-}
 
-fun createPlayer(number: Int, rolAsignado: Int): Player {
-
-    return when (rolAsignado) {
-        1 -> Defender(number.toString())
-        2 -> Midfielder(number.toString())
-        else -> Forward(number.toString())
-    }
-}
-
-fun createTeam(name: String, numberPlayers: Int): Team {
-
-    val bolsaDeRoles = mutableListOf(1, 2, 3)
-    val papelesFaltantes = numberPlayers - 3
-
-    for (i in 1..papelesFaltantes) {
-        val rolAlAzar = (1..3).random()
-        bolsaDeRoles.add(rolAlAzar)
+        return Team(name, players)
     }
 
-    bolsaDeRoles.shuffle()
-
-    val players = mutableListOf<Player>()
-
-    for (i in 0 until numberPlayers) {
-        val numeroDeJugador = i + 1
-        val papelQueLeToco = bolsaDeRoles[i]
-
-        players.add(createPlayer(numeroDeJugador, papelQueLeToco))
+    private fun createPlayer(number: Int, roleNumber: Int): Player {
+        return when (roleNumber) {
+            1 -> Defender(number.toString())
+            2 -> Midfielder(number.toString())
+            else -> Forward(number.toString())
+        }
     }
 
-    return Team(name, players)
+
+    fun playMatch(match: Match) {
+        val rounds = minOf(match.team1.players.size, match.team2.players.size)
+
+        for (i in 0 until rounds) {
+            if (i % 2 == 0) {
+
+                val attacker = match.team1.players[i]
+                val defender = match.team2.players[i]
+                resolveRound(attacker, defender, match.team1.name, match.team2.name, i, match, isTeam1Attacking = true)
+            } else {
+
+                val attacker = match.team2.players[i]
+                val defender = match.team1.players[i]
+                resolveRound(attacker, defender, match.team2.name, match.team1.name, i, match, isTeam1Attacking = false)
+            }
+        }
+        println("The final score is ${match.team1.name}: ${match.score1} - ${match.team2.name}: ${match.score2}")
+    }
+
+    private fun resolveRound(
+        attacker: Player,
+        defender: Player,
+        attackerName: String,
+        defenderName: String,
+        roundIndex: Int,
+        match: Match,
+        isTeam1Attacking: Boolean
+    ) {
+        println("The teams are attack $attackerName Vs Defender $defenderName")
+        println("Round# ${roundIndex + 1} the players attack: ${attacker.name} Vs Defender ${defender.name}")
+
+        if (attacker.attack > defender.defense) {
+
+            if (isTeam1Attacking) match.score1 += 1 else match.score2 += 1
+            println("For Team $attackerName The player ${attacker.name} Scored!!\n")
+
+        } else if (attacker.attack == defender.defense) {
+            println("Nice!! This is a Draw\n")
+
+        } else {
+            println("For the team $defenderName the player ${defender.name} is a genius")
+
+            if (isTeam1Attacking) match.score2 += 1 else match.score1 += 1
+            println("\n")
+        }
+    }
 }
