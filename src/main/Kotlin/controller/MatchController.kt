@@ -1,16 +1,8 @@
 package controller
 
-import models.Defender
-import models.Forward
-import models.Midfielder
-import models.Player
-import models.Team
+import models.*
 
-
-
-class Match (val team1: Team,val team2: Team) {
- var score1 = 0
- var score2 = 0
+class MatchController (val team1: Team,val team2: Team) {
 
     fun selectRol(player1: Player, player2: Player, name1: String, name2: String, i: Int) {
         println("The teams are attack $name1 Vs Defender $name2")
@@ -39,35 +31,39 @@ class Match (val team1: Team,val team2: Team) {
                selectRol(attacker, defender,team2.name,team1.name, i)
             }
         }
-        println("the final score is ${team1.name}: $score1 - ${team2.name}: $score2")
-    }
-}
-fun createPlayer(number: Int): Player {
-    println("Name of the player $number :")
-    val name = readln()
-
-    println("Select a type of the player:")
-    println("1 - Defender")
-    println("2 - Midfielder")
-    println("3 - Forward")
-
-    val type = readln().toInt()
-
-    return when (type) {
-        1 -> Defender(name)
-        2 -> Midfielder(name)
-        else -> Forward(name)
+        println("the final score is ${team1.name}: ${Match.score1} - ${team2.name}: $score2")
     }
 }
 
-fun createTeam(name: String, number: Int): Team {
+fun createPlayer(number: Int, rolAsignado: Int): Player {
+
+    return when (rolAsignado) {
+        1 -> Defender(number.toString())
+        2 -> Midfielder(number.toString())
+        else -> Forward(number.toString())
+    }
+}
+
+fun createTeam(name: String, numberPlayers: Int): Team {
+
+    val bolsaDeRoles = mutableListOf(1, 2, 3)
+    val papelesFaltantes = numberPlayers - 3
+
+    for (i in 1..papelesFaltantes) {
+        val rolAlAzar = (1..3).random()
+        bolsaDeRoles.add(rolAlAzar)
+    }
+
+    bolsaDeRoles.shuffle()
+
     val players = mutableListOf<Player>()
 
-    for (i in 1..number) {
-        players.add(createPlayer(i))
+    for (i in 0 until numberPlayers) {
+        val numeroDeJugador = i + 1
+        val papelQueLeToco = bolsaDeRoles[i]
+
+        players.add(createPlayer(numeroDeJugador, papelQueLeToco))
     }
 
     return Team(name, players)
 }
-
-
